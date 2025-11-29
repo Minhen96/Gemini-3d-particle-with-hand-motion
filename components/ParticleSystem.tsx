@@ -2,14 +2,22 @@ import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ParticleShape, HandData } from '../types';
-import { COLORS, PARTICLE_COUNTS, THREE_COLOR_PRIMARY, THREE_COLOR_HOT } from '../constants';
+import { PARTICLE_COUNTS, THREE_COLOR_HOT } from '../constants';
+import { AudioService } from '../services/audio';
 
 interface ParticleSystemProps {
   shape: ParticleShape;
+  color: string;
   handData: React.MutableRefObject<HandData>;
+  audioService: React.MutableRefObject<AudioService | null>;
+  particleCount: number;
+  charIndex: number; // 0-25
+  numIndex: number;  // 0-9
 }
 
-export const ParticleSystem: React.FC<ParticleSystemProps> = ({ shape, handData }) => {
+export const ParticleSystem: React.FC<ParticleSystemProps> = ({ 
+    shape, color, handData, audioService, particleCount, charIndex, numIndex 
+}) => {
   const pointsRef = useRef<THREE.Points>(null);
   const auraRef = useRef<THREE.Points>(null);
   
@@ -18,11 +26,72 @@ export const ParticleSystem: React.FC<ParticleSystemProps> = ({ shape, handData 
   const currentPositionsRef = useRef<Float32Array | null>(null);
   const velocitiesRef = useRef<Float32Array | null>(null);
   
-  const count = PARTICLE_COUNTS.CORE;
+  const count = particleCount;
   const auraCount = PARTICLE_COUNTS.AURA;
+  
+  // Memoize the THREE.Color object
+  const threeColorBase = useMemo(() => new THREE.Color(color), [color]);
+
+  // --- Text Generation Helper ---
+  const generateTextPositions = (text: string, pCount: number, radius = 10) => {
+    const size = 100; // Canvas resolution
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return new Float32Array(pCount * 3);
+
+    // Draw text
+    ctx.fillStyle = 'black'; // background
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = 'white'; // text
+    ctx.font = 'bold 80px "Orbitron", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, size / 2, size / 2);
+
+    const imageData = ctx.getImageData(0, 0, size, size);
+    const data = imageData.data;
+    const validPixels: [number, number][] = [];
+
+    // Scan for pixels
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const alpha = data[(y * size + x) * 4]; // Use red channel or alpha
+            if (alpha > 128) { // Threshold
+                validPixels.push([x, y]);
+            }
+        }
+    }
+
+    const positions = new Float32Array(pCount * 3);
+    if (validPixels.length === 0) return positions;
+
+    // Map pixels to particles
+    for (let i = 0; i < pCount; i++) {
+        const pixel = validPixels[Math.floor(Math.random() * validPixels.length)];
+        const x = (pixel[0] / size - 0.5) * radius * 1.5;
+        const y = -(pixel[1] / size - 0.5) * radius * 1.5; // Flip Y
+        const z = (Math.random() - 0.5) * radius * 0.2; // Small depth
+        
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+    }
+    return positions;
+  };
 
   // --- Geometry Generation Helper ---
   const generateTargetPositions = (type: ParticleShape, pCount: number, radius = 10) => {
+    // Check Text types first
+    if (type === ParticleShape.TEXT) {
+        const char = String.fromCharCode(65 + charIndex); // A = 65
+        return generateTextPositions(char, pCount, radius);
+    }
+    if (type === ParticleShape.NUMBER) {
+        return generateTextPositions(String(numIndex), pCount, radius);
+    }
+
     const positions = new Float32Array(pCount * 3);
     for (let i = 0; i < pCount; i++) {
       const i3 = i * 3;
@@ -62,6 +131,52 @@ export const ParticleSystem: React.FC<ParticleSystemProps> = ({ shape, handData 
             z = r * Math.sin(spin) + randomOffset;
             break;
         }
+        case ParticleShape.DNA: {
+          const strands = 2;
+          const strandIdx = i % strands;
+          const t = (i / pCount) * Math.PI * 10; 
+          const height = (i / pCount) * radius * 2.5 - radius * 1.25;
+          const r = radius * 0.5;
+          const offset = strandIdx * Math.PI;
+          x = r * Math.cos(t + offset) + (Math.random() - 0.5);
+          y = height;
+          z = r * Math.sin(t + offset) + (Math.random() - 0.5);
+          break;
+        }
+        case ParticleShape.SATURN: {
+           if (i < pCount * 0.7) {
+              const phi = Math.acos(-1 + (2 * i) / (pCount * 0.7));
+              const theta = Math.sqrt((pCount * 0.7) * Math.PI) * phi;
+              const r = radius * 0.6;
+              x = r * Math.cos(theta) * Math.sin(phi);
+              y = r * Math.sin(theta) * Math.sin(phi);
+              z = r * Math.cos(phi);
+           } else {
+              const theta = Math.random() * Math.PI * 2;
+              const rMin = radius * 0.8;
+              const rMax = radius * 1.5;
+              const r = Math.sqrt(Math.random()) * (rMax - rMin) + rMin;
+              x = r * Math.cos(theta);
+              y = (Math.random() - 0.5) * 0.2; 
+              z = r * Math.sin(theta);
+           }
+           break;
+        }
+        case ParticleShape.PYRAMID: {
+           let a = Math.random();
+           let b = Math.random();
+           let c = Math.random();
+           if (a + b > 1) { a = 1 - a; b = 1 - b; }
+           if (b + c > 1) { b = 1 - b; c = 1 - c; }
+           if (a + b + c > 1) { a = 1 - a; b = 1 - b; c = 1 - c; }
+           const d = 1 - a - b - c;
+           const s = radius * 1.5;
+           const v1 = [s, s, s], v2 = [-s, -s, s], v3 = [-s, s, -s], v4 = [s, -s, -s];
+           x = a*v1[0] + b*v2[0] + c*v3[0] + d*v4[0];
+           y = a*v1[1] + b*v2[1] + c*v3[1] + d*v4[1];
+           z = a*v1[2] + b*v2[2] + c*v3[2] + d*v4[2];
+           break;
+        }
         case ParticleShape.BIG_BANG:
         default: {
           const r = Math.random() * radius * 2;
@@ -82,19 +197,17 @@ export const ParticleSystem: React.FC<ParticleSystemProps> = ({ shape, handData 
 
   // --- Initialization ---
   useMemo(() => {
-    // initialize arrays
     currentPositionsRef.current = generateTargetPositions(ParticleShape.BIG_BANG, count);
     velocitiesRef.current = new Float32Array(count * 3).fill(0);
-    // Initial target
     targetPositionsRef.current = generateTargetPositions(shape, count);
-  }, []); // Run once
+  }, [count]); 
 
   // --- Shape Update Effect ---
   useEffect(() => {
     targetPositionsRef.current = generateTargetPositions(shape, count);
-  }, [shape, count]);
+  }, [shape, count, charIndex, numIndex]); // Re-generate when text/num changes
 
-  // --- Aura Geometry (Static-ish, just follows rotation) ---
+  // --- Aura Geometry ---
   const auraGeometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     const pos = generateTargetPositions(ParticleShape.SPHERE, auraCount, 12);
@@ -107,44 +220,54 @@ export const ParticleSystem: React.FC<ParticleSystemProps> = ({ shape, handData 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(currentPositionsRef.current!, 3));
     const colors = new Float32Array(count * 3);
-    // Initialize cyan
     for(let i=0; i<count; i++) {
-        colors[i*3] = THREE_COLOR_PRIMARY.r;
-        colors[i*3+1] = THREE_COLOR_PRIMARY.g;
-        colors[i*3+2] = THREE_COLOR_PRIMARY.b;
+        colors[i*3] = threeColorBase.r;
+        colors[i*3+1] = threeColorBase.g;
+        colors[i*3+2] = threeColorBase.b;
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     return geo;
-  }, [count]);
+  }, [count]); 
 
   // --- Animation Loop ---
   useFrame((state) => {
     if (!pointsRef.current || !currentPositionsRef.current || !targetPositionsRef.current || !velocitiesRef.current) return;
 
-    const { x: handX, y: handY, isClenched, isDetected, handSpread } = handData.current;
+    const { x: handX, y: handY, isDetected, handSpread } = handData.current;
     
-    // Rotation Logic (Hand acts as joystick)
+    // --- Audio Reactivity ---
+    let audioBass = 0;
+    let audioTreble = 0;
+    if (audioService.current) {
+        const audioData = audioService.current.getFrequencyData();
+        audioBass = audioData.bass;
+        audioTreble = audioData.treble;
+    }
+
+    // Rotation Logic 
     const targetRotX = isDetected ? -handY * 1.5 : (state.mouse.y * 1.0);
-    const targetRotY = isDetected ? handX * 1.5 : (state.mouse.x * 1.0);
+    const targetRotY = isDetected ? handX * 1.5 : (state.mouse.x * 1.0) + (state.clock.elapsedTime * 0.05); // Auto rotate slightly
     
-    // Smoothly interpolate rotation
     pointsRef.current.rotation.x = THREE.MathUtils.lerp(pointsRef.current.rotation.x, targetRotX, 0.1);
     pointsRef.current.rotation.y = THREE.MathUtils.lerp(pointsRef.current.rotation.y, targetRotY, 0.1);
 
-    // Scaling Logic (Expand Hand = Zoom In, Clench = Zoom Out)
-    // handSpread is 0 (Fist) to 1 (Open)
-    // Map 0 -> 0.4 (small)
-    // Map 1 -> 1.5 (large)
-    const targetScale = isDetected ? 0.4 + (handSpread * 1.1) : 1.0;
-    const lerpSpeed = 0.05;
+    // Scaling Logic: 
+    // If tracking: Range from 0.3 (Closed Fist) to 1.5 (Wide Open)
+    // If not tracking: Default to 1.0
+    const baseScale = isDetected ? 0.3 + (handSpread * 1.2) : 1.0;
+    const audioScale = audioBass * 0.4; // Bass expands the model
+    const targetScale = baseScale + audioScale;
+    const lerpSpeed = 0.08;
     
     pointsRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), lerpSpeed);
 
-    // Also rotate/scale Aura
+    // Aura follows
     if (auraRef.current) {
         auraRef.current.rotation.x = pointsRef.current.rotation.x * 0.8;
         auraRef.current.rotation.y = pointsRef.current.rotation.y * 0.8;
-        auraRef.current.scale.copy(pointsRef.current.scale);
+        // Aura pulses more with audio
+        const auraScale = targetScale * (1 + audioBass * 0.5);
+        auraRef.current.scale.lerp(new THREE.Vector3(auraScale, auraScale, auraScale), lerpSpeed);
     }
 
     const positions = pointsRef.current.geometry.attributes.position.array as Float32Array;
@@ -152,67 +275,46 @@ export const ParticleSystem: React.FC<ParticleSystemProps> = ({ shape, handData 
     const targets = targetPositionsRef.current;
     const vels = velocitiesRef.current;
     
-    // "Mouse Clench" fallback
-    const effectiveClench = isDetected ? isClenched : false; 
-
     // Physics constants
-    const attraction = effectiveClench ? 0.2 : 0.03; // Pull to target
-    const damping = effectiveClench ? 0.85 : 0.92; // Friction
-    const noiseAmt = effectiveClench ? 0.5 : 0.02; // Random wiggle
-    const blackHoleStrength = 0.8;
+    const attraction = 0.03; 
+    const damping = 0.92;
+    const noiseAmt = 0.02 + (audioTreble * 0.1); 
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3;
-      let tx = targets[i3];
-      let ty = targets[i3 + 1];
-      let tz = targets[i3 + 2];
+      const tx = targets[i3];
+      const ty = targets[i3 + 1];
+      const tz = targets[i3 + 2];
 
-      if (effectiveClench) {
-        // Black hole mode: Target is center (0,0,0) with heavy swirl
-        tx = 0;
-        ty = 0;
-        tz = 0;
-        
-        // Add swirl force to velocity
-        const px = positions[i3];
-        const pz = positions[i3+2];
-        vels[i3] += -pz * blackHoleStrength * 0.1; // Tangential force
-        vels[i3+2] += px * blackHoleStrength * 0.1;
-      }
-
-      // Acceleration towards target
+      // Standard Attraction Physics
       const ax = (tx - positions[i3]) * attraction;
       const ay = (ty - positions[i3 + 1]) * attraction;
       const az = (tz - positions[i3 + 2]) * attraction;
 
-      // Random noise (Brownian motion)
       const nx = (Math.random() - 0.5) * noiseAmt;
       const ny = (Math.random() - 0.5) * noiseAmt;
       const nz = (Math.random() - 0.5) * noiseAmt;
 
-      // Update Velocity
       vels[i3] += ax + nx;
       vels[i3 + 1] += ay + ny;
       vels[i3 + 2] += az + nz;
 
-      // Damping
       vels[i3] *= damping;
       vels[i3 + 1] *= damping;
       vels[i3 + 2] *= damping;
 
-      // Update Position
       positions[i3] += vels[i3];
       positions[i3 + 1] += vels[i3 + 1];
       positions[i3 + 2] += vels[i3 + 2];
 
-      // Dynamic Coloring based on Velocity Magnitude
+      // Dynamic Coloring
       const speed = Math.sqrt(vels[i3]**2 + vels[i3+1]**2 + vels[i3+2]**2);
-      // Threshold for "Hot"
-      const t = Math.min(speed * 3.0, 1); // 0 = Cyan, 1 = White
+      // Audio treble makes particles hotter easier
+      const t = Math.min((speed * 3.0) + (audioTreble * 0.5), 1); 
       
-      colors[i3] = THREE.MathUtils.lerp(THREE_COLOR_PRIMARY.r, THREE_COLOR_HOT.r, t);
-      colors[i3+1] = THREE.MathUtils.lerp(THREE_COLOR_PRIMARY.g, THREE_COLOR_HOT.g, t);
-      colors[i3+2] = THREE.MathUtils.lerp(THREE_COLOR_PRIMARY.b, THREE_COLOR_HOT.b, t);
+      colors[i3] = THREE.MathUtils.lerp(threeColorBase.r, THREE_COLOR_HOT.r, t);
+      colors[i3+1] = THREE.MathUtils.lerp(threeColorBase.g, THREE_COLOR_HOT.g, t);
+      colors[i3+2] = THREE.MathUtils.lerp(threeColorBase.b, THREE_COLOR_HOT.b, t);
     }
 
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
@@ -221,7 +323,6 @@ export const ParticleSystem: React.FC<ParticleSystemProps> = ({ shape, handData 
 
   return (
     <>
-      {/* Core Particles */}
       <points ref={pointsRef} geometry={geometry}>
         <pointsMaterial
           size={0.06}
@@ -233,11 +334,10 @@ export const ParticleSystem: React.FC<ParticleSystemProps> = ({ shape, handData 
         />
       </points>
 
-      {/* Aura Particles (Glow effect) */}
       <points ref={auraRef} geometry={auraGeometry}>
          <pointsMaterial
           size={0.3}
-          color={COLORS.primary}
+          color={color}
           transparent
           opacity={0.15}
           blending={THREE.AdditiveBlending}

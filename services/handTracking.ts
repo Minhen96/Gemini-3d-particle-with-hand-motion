@@ -12,6 +12,7 @@ export class HandTrackerService {
   private onResultsCallback: (data: HandData) => void;
   private stream: MediaStream | null = null;
   private animationFrameId: number | null = null;
+  private isActive: boolean = false;
 
   constructor(videoElement: HTMLVideoElement, onResults: (data: HandData) => void) {
     this.videoElement = videoElement;
@@ -20,6 +21,7 @@ export class HandTrackerService {
 
   public async initialize() {
     console.log("Initializing HandTrackerService...");
+    this.isActive = true;
     
     // Access Hands from the global window object loaded via script tag
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,6 +79,8 @@ export class HandTrackerService {
 
   private startLoop = () => {
       const step = async () => {
+          if (!this.isActive) return;
+
           if (this.hands && this.videoElement.readyState >= 2) {
              try {
                 await this.hands.send({ image: this.videoElement });
@@ -90,6 +94,8 @@ export class HandTrackerService {
   }
 
   private processResults = (results: Results) => {
+    if (!this.isActive) return;
+
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       const landmarks = results.multiHandLandmarks[0];
       
@@ -158,10 +164,21 @@ export class HandTrackerService {
   };
 
   public stop() {
+    this.isActive = false;
     if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+    
     if (this.stream) {
         this.stream.getTracks().forEach(track => track.stop());
+        this.stream = null;
     }
-    if (this.hands) this.hands.close();
+    
+    if (this.videoElement) {
+        this.videoElement.srcObject = null;
+    }
+
+    if (this.hands) {
+        this.hands.close();
+        this.hands = null;
+    }
   }
 }
