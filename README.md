@@ -1,9 +1,11 @@
 <div align="center">
+
 # J.A.R.V.I.S. Holographic Interface
 ### Immersive Augmented Reality Particle System
-   <img width="1915" height="858" alt="Jarvis Interface Demo 1" src="https://github.com/user-attachments/assets/96e980f1-b61f-428e-a2ef-52dcf8a2165d" />
-   <img width="1915" height="852" alt="Image" src="https://github.com/user-attachments/assets/c26517a7-7b0e-4985-af4e-4a7c7d36f4ab" />
+<img width="1915" height="858" alt="Jarvis Interface Demo 1" src="https://github.com/user-attachments/assets/96e980f1-b61f-428e-a2ef-52dcf8a2165d" />
+<img width="1915" height="852" alt="Image" src="https://github.com/user-attachments/assets/c26517a7-7b0e-4985-af4e-4a7c7d36f4ab" />
 </div>
+
 
 ## 🌌 Overview
 This project is a high-performance **Holographic Particle Interface** inspired by Iron Man's JARVIS. It utilizes **React**, **Three.js**, and **MediaPipe** to create a living, breathing 3D system that responds to your hand gestures, voice commands, and ambient audio in real-time.
