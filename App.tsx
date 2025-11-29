@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { ParticleSystem } from './components/ParticleSystem';
@@ -213,9 +213,16 @@ export default function App() {
 
   const triggerSnapshot = () => {
       setFlashOpacity(1);
+      // Increment to ensure unique value triggers effect
       setCaptureTrigger(prev => prev + 1);
       setTimeout(() => setFlashOpacity(0), 100);
   };
+  
+  // Stable callback to reset trigger to 0 after capture
+  // This prevents the SceneCapture useEffect from re-running on every render
+  const handleCaptureComplete = useCallback(() => {
+      setCaptureTrigger(0);
+  }, []);
 
   const cycleChar = (dir: number) => {
       setCharIndex(prev => {
@@ -262,7 +269,7 @@ export default function App() {
             numIndex={numIndex}
         />
         <Shockwave color={color} />
-        <SceneCapture captureTrigger={captureTrigger} onCaptureComplete={() => {}} />
+        <SceneCapture captureTrigger={captureTrigger} onCaptureComplete={handleCaptureComplete} />
       </Canvas>
       
       {/* Camera Flash Overlay */}
