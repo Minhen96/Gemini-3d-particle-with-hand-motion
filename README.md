@@ -6,8 +6,8 @@
    <img width="1916" height="857" alt="Jarvis Interface Demo 2" src="https://github.com/user-attachments/assets/b9cbb5af-e67a-4652-9b5c-a39546945ae2" />
 </div>
 
-**Welcome to play:** [https://gemini-3d-particle-with-hand-motion.vercel.app/](https://gemini-3d-particle-with-hand-motion.vercel.app/)
-**View app in AI Studio:** [https://ai.studio/apps/drive/145FYDKxccvvs5aGZ5Evx5LcN6KpEkdOf](https://ai.studio/apps/drive/145FYDKxccvvs5aGZ5Evx5LcN6KpEkdOf)
+*   **Welcome to play:** [https://gemini-3d-particle-with-hand-motion.vercel.app/](https://gemini-3d-particle-with-hand-motion.vercel.app/)
+*   **View app in AI Studio:** [https://ai.studio/apps/drive/145FYDKxccvvs5aGZ5Evx5LcN6KpEkdOf](https://ai.studio/apps/drive/145FYDKxccvvs5aGZ5Evx5LcN6KpEkdOf)
 
 ## 🌌 Overview
 This project is a high-performance **Holographic Particle Interface** inspired by Iron Man's JARVIS. It utilizes **React**, **Three.js**, and **MediaPipe** to create a living, breathing 3D system that responds to your hand gestures, voice commands, and ambient audio in real-time.
