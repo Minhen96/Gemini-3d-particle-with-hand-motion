@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Jarvis Holographic Interface</title>
+    <!-- Sci-Fi Reactor Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 stroke=%22%2300f3ff%22 stroke-width=%225%22 fill=%22none%22/><circle cx=%2250%22 cy=%2250%22 r=%2220%22 fill=%22%2300f3ff%22/><path d=%22M50 5 L50 20 M50 80 L50 95 M95 50 L80 50 M20 50 L5 50%22 stroke=%22%2300f3ff%22 stroke-width=%225%22/></svg>" />
     <!-- Keep Tailwind CDN for simplicity in this specific setup, though installing it via PostCSS is better for prod -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
@@ -36,7 +38,10 @@
       
       /* Animation Utilities */
       .animate-spin-slow {
-        animation: spin 3s linear infinite;
+        animation: spin 4s linear infinite;
+      }
+      .animate-spin-reverse-slower {
+        animation: spin 8s linear infinite reverse;
       }
       @keyframes spin {
         from { transform: rotate(0deg); }
@@ -48,15 +53,15 @@
   <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "vite": "https://aistudiocdn.com/vite@^7.2.6",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@react-three/fiber": "https://aistudiocdn.com/@react-three/fiber@^9.4.2",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "three": "https://aistudiocdn.com/three@^0.181.2",
-    "@react-three/drei": "https://aistudiocdn.com/@react-three/drei@^10.7.7"
+    "@react-three/fiber": "https://aistudiocdn.com/@react-three/fiber@^9.4.2",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "@react-three/drei": "https://aistudiocdn.com/@react-three/drei@^10.7.7",
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
   }
 }
 </script>

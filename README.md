@@ -6,6 +6,8 @@
 ### Immersive Augmented Reality Particle System
 </div>
 
+**View your app in AI Studio:** [https://ai.studio/apps/drive/145FYDKxccvvs5aGZ5Evx5LcN6KpEkdOf](https://ai.studio/apps/drive/145FYDKxccvvs5aGZ5Evx5LcN6KpEkdOf)
+
 ## 🌌 Overview
 This project is a high-performance **Holographic Particle Interface** inspired by Iron Man's JARVIS. It utilizes **React**, **Three.js**, and **MediaPipe** to create a living, breathing 3D system that responds to your hand gestures, voice commands, and ambient audio in real-time.
 
@@ -80,6 +82,20 @@ Integrated Web Speech API allows for hands-free control.
 4. **Access**:
    Open `http://localhost:5173` (or the port shown in your terminal).
    *Allow Camera and Microphone permissions when prompted.*
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Push code to GitHub.
+2. Import project into Vercel.
+3. Vercel will auto-detect **Vite**.
+4. Deploy.
+
+### Netlify
+1. Push code to GitHub.
+2. New Site from Git -> Select Repo.
+3. Build Command: `npm run build`
+4. Publish Directory: `dist`
 
 ---
 

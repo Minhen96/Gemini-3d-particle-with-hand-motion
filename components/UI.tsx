@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ParticleShape, HandData } from '../types';
-import { Activity, Radio, Hand, Grip, Cpu, Palette, Mic, MicOff, Waves, AlertTriangle, Video, VideoOff, Clock, Calendar, Camera, Layers, Settings, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Activity, Radio, Hand, Grip, Cpu, Palette, Mic, MicOff, Waves, AlertTriangle, Video, VideoOff, Clock, Calendar, Camera, Layers, Settings, X, ChevronRight, ChevronLeft, Atom } from 'lucide-react';
 import { COLOR_PALETTES } from '../constants';
 import { AudioService } from '../services/audio';
 
@@ -140,16 +140,31 @@ export const UI: React.FC<UIProps> = ({
         {/* Header (Top Left Dashboard) */}
         <div className="flex justify-between items-start pointer-events-auto">
           <div className="flex flex-col gap-4">
-              <div>
-                <h1 
-                    className="text-2xl md:text-4xl font-sci-fi text-transparent bg-clip-text font-black tracking-wider drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]"
-                    style={{ backgroundImage: `linear-gradient(to right, ${currentColor}, #ffffff)` }}
-                >
-                  JARVIS
-                </h1>
-                <div className="flex items-center gap-2 mt-1">
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: currentColor }}></div>
-                    <span className="text-xs font-mono tracking-[0.2em] opacity-80" style={{ color: currentColor }}>SYSTEM ONLINE</span>
+              
+              {/* Logo & Title Section */}
+              <div className="flex items-center gap-4">
+                {/* Reactor Logo */}
+                <div className="relative w-12 h-12 flex items-center justify-center group">
+                    {/* Outer Ring */}
+                    <div className="absolute inset-0 border-2 border-dashed rounded-full animate-spin-slow opacity-80" style={{ borderColor: currentColor }}></div>
+                    {/* Inner Ring */}
+                    <div className="absolute inset-[3px] border border-current rounded-full opacity-40 animate-spin-reverse-slower" style={{ borderColor: currentColor }}></div>
+                    {/* Core */}
+                    <Atom size={24} className="text-white drop-shadow-[0_0_5px_currentColor] animate-pulse relative z-10" style={{ color: currentColor }} />
+                    <div className="absolute inset-0 bg-current opacity-10 blur-md rounded-full" style={{ backgroundColor: currentColor }}></div>
+                </div>
+
+                <div>
+                    <h1 
+                        className="text-2xl md:text-4xl font-sci-fi text-transparent bg-clip-text font-black tracking-wider drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]"
+                        style={{ backgroundImage: `linear-gradient(to right, ${currentColor}, #ffffff)` }}
+                    >
+                    JARVIS
+                    </h1>
+                    <div className="flex items-center gap-2 mt-1">
+                        <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: currentColor }}></div>
+                        <span className="text-xs font-mono tracking-[0.2em] opacity-80" style={{ color: currentColor }}>SYSTEM ONLINE</span>
+                    </div>
                 </div>
               </div>
 
